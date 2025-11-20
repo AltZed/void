@@ -9,13 +9,4 @@ export class UsersService {
     @InjectRepository(UsersEntity)
     private readonly userRepository: Repository<UsersEntity>,
   ) {}
-
-  async getMe(id: string) {
-    return await this.userRepository.findOne({
-      where: {
-        id,
-      },
-      select: ['id', 'avatar', 'email', 'createdAt', 'name', 'username'],
-    });
-  }
 }
