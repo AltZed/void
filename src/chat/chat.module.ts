@@ -2,11 +2,11 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { getJwtConfig } from 'src/config/jwt.config';
-import { UsersModule } from 'src/users/users.module';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
-import { JwtStrategy } from './strategies/jwt.strategy';
+import { UsersEntity } from 'src/users/entities/users.entity';
+import { ChatGateway } from './chat.gateway';
+import { ChatService } from './chat.service';
 
 @Module({
   imports: [
@@ -16,9 +16,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       useFactory: getJwtConfig,
       inject: [ConfigService],
     }),
-    UsersModule,
+    TypeOrmModule.forFeature([UsersEntity]),
   ],
-  controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [ChatGateway, ChatService],
 })
-export class AuthModule {}
+export class ChatModule {}

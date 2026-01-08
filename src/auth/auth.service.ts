@@ -10,6 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as argon2 from 'argon2';
 import type { Request, Response } from 'express';
 import { UsersEntity } from 'src/users/entities/users.entity';
+import generateUsername from 'src/utils/generate-username.util';
 import { parseTimeToMs } from 'src/utils/parser-time.util';
 import { Repository } from 'typeorm';
 import { LoginRequest } from './dto/login.dto';
@@ -36,26 +37,34 @@ export class AuthService {
   }
 
   async register(res: Response, dto: RegisterRequest) {
-    const { name, email, username, password, avatar } = dto;
+    const { name, email, password } = dto;
 
-    // Find
+    // default URL avatar
+    const avatar =
+      'https://so-ta.ru/profile/avatars/DarkusFoxis_68538d0c98239.webp';
+
+    // Checking email
     const existingUserByEmail = await this.usersRepository.findOne({
       where: { email: email },
     });
-
     if (existingUserByEmail) {
       throw new ConflictException('Пользователь с таким email уже существует');
     }
 
-    const existingUserByUsername = await this.usersRepository.findOne({
-      where: { username: username },
-    });
+    // Generate username
+    let username: string;
+    let existingUserByUsername: UsersEntity | null;
 
-    if (existingUserByUsername) {
-      throw new ConflictException(
-        'Пользователь с таким username уже существует',
-      );
-    }
+    // A cycle in which a username is generated and,
+    // if it exists in the database, it should be
+    // regenerated and subsequently verified.
+    do {
+      // generate
+      username = generateUsername();
+      existingUserByUsername = await this.usersRepository.findOne({
+        where: { username },
+      });
+    } while (existingUserByUsername);
 
     // Created
     const createdUser = await this.usersRepository.create({
@@ -76,13 +85,12 @@ export class AuthService {
     const user = await this.usersRepository.findOne({
       where: { email: email },
     });
-
     if (!user) {
       throw new NotFoundException('Пользователь не найден!');
     }
 
+    // validate password
     const isValidPassword = await argon2.verify(user.password, password);
-
     if (!isValidPassword) {
       throw new NotFoundException('Пользователь не найден!');
     }

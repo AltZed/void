@@ -15,18 +15,8 @@ export class RegisterRequest {
 
   @IsString()
   @IsNotEmpty()
-  @MinLength(4)
-  @MaxLength(64)
-  username: string;
-
-  @IsString()
-  @IsNotEmpty()
   @IsEmail()
   email: string;
-
-  @IsString()
-  @IsNotEmpty()
-  avatar: string;
 
   @IsString()
   @IsNotEmpty()
